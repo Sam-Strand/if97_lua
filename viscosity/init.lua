@@ -1,6 +1,6 @@
 local u
 
-local data = require 'data.dataViscosity'
+local data = require 'viscosity.data'
 local VHi, Vi, Vj, VHij = data.VHi, data.Vi, data.Vj, data.VHij
 u = function(tau, delta)
     local mu0 = 0

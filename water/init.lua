@@ -1,5 +1,5 @@
 
-local data, kTps, kTph = require 'data.dataReg1'
+local data, kTps, kTph = require 'water.data'
 
 local case = {
     --[1] γ

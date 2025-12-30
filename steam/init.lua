@@ -1,5 +1,5 @@
 local steam = {}
-local data = require 'data.dataReg2'
+local data = require 'steam.data'
 local N0, J0, Nr, Ir, Jr, kT2aps, kT2bps, kT2cps, kT2aph, kT2bph, kT2cph =
     data.N02, data.J02, data.Nr2, data.Ir2, data.Jr2, data.kT2aps, data.kT2bps, data.kT2cps, data.kT2aph, data
     .kT2bph, data.kT2cph

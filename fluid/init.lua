@@ -1,6 +1,6 @@
 local fluid = {}
 local n1 = 1.0658070028513
-local data = require 'fluid.dataReg3'
+local data = require 'fluid.data'
 
 local case = {
     --[1] φ
