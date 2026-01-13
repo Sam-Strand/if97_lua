@@ -1,57 +1,13 @@
+local gamma = require 'water.gamma'
+local kTps, kTph = require 'water.data'
+local R = 461.526
 
-local data, kTps, kTph = require 'water.data'
+local function get_pi(p)
+    return p / 16.53
+end
 
-local case = {
-    --[1] γ
-    function(t, p, energy)
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * p ^ k[1] * t ^ k[2]
-        end
-        return energy
-    end,
-    --[2] γ_τ
-    function(t, p, energy)
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * k[2] * p ^ k[1] * t ^ (k[2] - 1)
-        end
-        return energy
-    end,
-    --[3] γ_ττ
-    function(t, p, energy)
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * k[2] * (k[2] - 1) * p ^ k[1] *
-                t ^ (k[2] - 2)
-        end
-        return energy
-    end,
-    --[4] γ_πτ
-    function(t, p, energy)
-        for _, k in ipairs(data) do
-            energy = energy - k[3] * k[1] * k[2] * p ^ (k[1] - 1) *
-                t ^ (k[2] - 1)
-        end
-        return energy
-    end,
-    --[5] γ_πτ
-    function(t, p, energy)
-        for _, k in ipairs(data) do
-            energy = energy - k[3] * k[1] * p ^ (k[1] - 1) * t ^ k[2]
-        end
-        return energy
-    end,
-    --[6] γ_πτ
-    function(t, p, energy)
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * k[1] * (k[1] - 1) * p ^ (k[1] - 2) *
-                t ^ k[2]
-        end
-        return energy
-    end
-}
-local function JF(t, p, trigger)
-    p = 7.1 - p / (16.53 * 1e6)
-    t = 1386 / t - 1.222
-    return case[trigger + 1](t, p, 0)
+local function get_tau(t)
+    return 1386 / t
 end
 
 local water = {}
@@ -76,45 +32,85 @@ water.t = {
         return t
     end
 }
+
 water.i = {
     t_p = function(t, p)
-        return R * 1386 * JF(t, p, 1)
+        local pi = get_pi(p)
+        local tau = get_tau(t)
+        local gamma_tau_val = gamma.tau(pi, tau)
+        return R * 1386 * gamma_tau_val
     end
 }
+
 water.w = {
     t_p = function(t, p)
-        local tf = 1386 / t
-        return math.sqrt(R * t * JF(t, p, 4) ^ 2 /
-            ((JF(t, p, 4) - tf * JF(t, p, 3)) ^ 2 / (tf ^ 2 * JF(t, p, 2)) - JF(t, p, 5)))
+        local pi = get_pi(p)
+        local tau = get_tau(t)
+        
+        local gamma_pitau_val = gamma.pi_tau(pi, tau)
+        local gamma_tautau_val = gamma.tau_tau(pi, tau)
+        local gamma_pi_val = gamma.pi(pi, tau)
+        local gamma_pipi_val = gamma.pi_pi(pi, tau)
+        
+        return math.sqrt(R * t * gamma_pitau_val ^ 2 /
+            ((gamma_pitau_val - tau * gamma_tautau_val) ^ 2 / 
+            (tau ^ 2 * gamma_pi_val) - gamma_pipi_val))
     end
 }
+
 water.v = {
     t_p = function(t, p)
-        return t * R * JF(t, p, 4) / 16530000
+        local pi = get_pi(p)
+        local tau = get_tau(t)
+        local gamma_pi_val = gamma.pi(pi, tau)
+        return t * R * gamma_pi_val / 16530000
     end
 }
+
 water.cv = {
     t_p = function(t, p)
+        local pi = get_pi(p)
+        local tau = get_tau(t)
         local tf = 1386 / t
-        return R *
-            (-tf ^ 2 * JF(t, p, 2) + (JF(t, p, 4) - tf * JF(t, p, 3)) ^ 2 / JF(t, p, 5))
+        
+        local gamma_pitau_val = gamma.pi_tau(pi, tau)
+        local gamma_tautau_val = gamma.tau_tau(pi, tau)
+        local gamma_pi_val = gamma.pi(pi, tau)
+        local gamma_pipi_val = gamma.pi_pi(pi, tau)
+        
+        return R * (-tf ^ 2 * gamma_tautau_val + 
+            (gamma_pitau_val - tf * gamma_tautau_val) ^ 2 / gamma_pipi_val)
     end
 }
+
 water.cp = {
     t_p = function(t, p)
-        return -R * (1386 / t) ^ 2 * JF(t, p, 2)
+        local pi = get_pi(p)
+        local tau = get_tau(t)
+        local gamma_tautau_val = gamma.tau_tau(pi, tau)
+        return -R * (1386 / t) ^ 2 * gamma_tautau_val
     end
 }
+
 water.s = {
     t_p = function(t, p)
-        return R * (1386 / t * JF(t, p, 1) - JF(t, p, 0))
+        local pi = get_pi(p)
+        local tau = get_tau(t)
+        local gamma_val = gamma(pi, tau)
+        local gamma_tau_val = gamma.tau(pi, tau)
+        return R * (1386 / t * gamma_tau_val - gamma_val)
     end
 }
+
 water.rho = {
     t_p = function(t, p)
-        return 1 / (t * R * JF(t, p, 4) / 16530000)
+        local pi = get_pi(p)
+        local tau = get_tau(t)
+        local gamma_pi_val = gamma.pi(pi, tau)
+        return 1 / (t * R * gamma_pi_val / 16530000)
     end
 }
+
 water.u = {
     t_rho = u
 }
