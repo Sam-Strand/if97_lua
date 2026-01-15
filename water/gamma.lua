@@ -50,9 +50,17 @@ function gamma:pi_pi(pi, tau)
     return energy
 end
 
+local function get_pi(p)
+    return p / 16.53
+end
+
+local function get_tau(t)
+    return 1386 / t
+end
+
 local gamma_mt = {
     __call = gamma.__call,
     __index = gamma
 }
 
-return setmetatable({}, gamma_mt)
+return setmetatable({}, gamma_mt), get_pi, get_tau

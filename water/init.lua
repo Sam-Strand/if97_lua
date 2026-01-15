@@ -1,47 +1,12 @@
 local gamma = require 'water.gamma'
 local kTps, kTph = require 'water.data'
-local R = 461.526
-
-local function get_pi(p)
-    return p / 16.53
-end
-
-local function get_tau(t)
-    return 1386 / t
-end
+local t = require 'water.t'
 
 local water = {}
 
-water.t = {
-    p_s = function(p, s)
-        p = p * 1e-6
-        local t = 0
-        s = s / 1000 + 2
-        for _, k in ipairs(kTps) do
-            t = t + k[3] * p ^ k[1] * s ^ k[2]
-        end
-        return t
-    end,
-    p_h = function(p, i)
-        p = p * 1e-6
-        i = i / 2500000 + 1
-        local t = 0
-        for _, k in ipairs(kTph) do
-            t = t + k[3] * p ^ k[1] * i ^ k[2]
-        end
-        return t
-    end
-}
+water.t = t
 
-water.i = {
-    t_p = function(t, p)
-        local pi = get_pi(p)
-        local tau = get_tau(t)
-        local gamma_tau_val = gamma.tau(pi, tau)
-        return R * 1386 * gamma_tau_val
-    end
-}
-
+water.h = h
 water.w = {
     t_p = function(t, p)
         local pi = get_pi(p)
