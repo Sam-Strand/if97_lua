@@ -1,117 +1,66 @@
+local R = require'consts'.R
+local phi, get_tau, get_delta = require'fluid.Helmholtz'
+local sqrt = require'math'.sqrt
+
 local fluid = {}
-local n1 = 1.0658070028513
-local data = require 'fluid.data'
-
-local case = {
-    --[1] φ
-    function(tau, delta, energy)
-        energy = n1 * math.log(delta)
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * delta ^ k[1] * tau ^ k[2]
-        end
-        return energy
-    end,
-    --[2] φτ
-    function(tau, delta, energy)
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * delta ^ k[1] * k[2] * tau ^ (k[2] - 1)
-        end
-        return energy
-    end,
-    --[3] φττ
-    function(tau, delta, energy)
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * delta ^ k[1] * k[2] * (k[2] - 1) * tau ^ (k[2] - 2)
-        end
-        return energy
-    end,
-    --[4] φδ
-    function(tau, delta, energy)
-        energy = n1 / delta
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * k[1] * delta ^ (k[1] - 1) * tau ^ k[2]
-        end
-        return energy
-    end,
-    --[5] φδδ
-    function(tau, delta, energy)
-        energy = -n1 / delta ^ 2
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * k[1] * (k[1] - 1) * delta ^ (k[1] - 2) * tau ^ k[2]
-        end
-        return energy
-    end,
-    --[6] φδτ
-    function(tau, delta, energy)
-        for _, k in ipairs(data) do
-            energy = energy + k[3] * k[1] * delta ^ (k[1] - 1) * k[2] * tau ^ (k[2] - 1)
-        end
-        return energy
-    end
-}
-local function JF(tau, delta, trigger)
-    return case[trigger](tau, delta, 0)
-end
-
-local t0 = 373.946
-local rho0 = 322
-local CtoK = 273.15
-local R = 461.526
 
 fluid.i = {
     t_rho = function(t, rho)
-        t = t + CtoK
-        local tau, delta = t0 / t, rho / rho0
-        return (tau * JF(tau, delta, 2) + delta * JF(tau, delta, 4)) * R * t
+        local tau = get_tau(t)
+        local delta = get_delta(rho)
+        return (tau * phi:tau((tau, delta) + delta * phi:delta(tau, delta)) * R * t
     end
 }
 
 fluid.w = {
     t_rho = function(t, rho)
-        t = t + CtoK
-        local tau, delta = t0 / t, rho / rho0
-        local JF4 = JF(tau, delta, 4)
+        local tau = get_tau(t)
+        local delta = get_delta(rho)
+        local phi_delta = phi:delta(tau, delta)
         return
-            ((
-                2 * JF4 / delta +
-                JF(tau, delta, 5) -
-                (JF4 - tau * JF(tau, delta, 6)) ^ 2 /
-                (tau ^ 2 * JF(tau, delta, 3))
-            ) * R * t * delta ^ 2) ^ 0.5
+            sqrt((
+                2 * phi_delta / delta +
+                phi:delta_delta(tau, delta) -
+                (phi_delta - tau * phi:delta_tau(tau, delta)) ^ 2 /
+                (tau ^ 2 * phi:tau_tau(tau, delta))
+            ) * R * t * delta ^ 2)
     end
 }
 
 fluid.cv = {
     t_rho = function(t, rho)
-        local tau, delta = t0 / (t + CtoK), rho / rho0
-        return -(tau) ^ 2 * JF(tau, delta, 3) * R
+        local tau = get_tau(t)
+        local delta = get_delta(rho)
+        return -(tau) ^ 2 * phi:tau_tau(tau, delta) * R
     end
 }
 
 fluid.cp = {
     t_rho = function(t, rho)
-        local tau, delta = t0 / (t + CtoK), rho / rho0
-        local JF4 = JF(tau, delta, 4)
+        local tau = get_tau(t)
+        local delta = get_delta(rho)
+        local phi_delta = phi:delta(tau, delta)
         return (
-            -tau ^ 2 * JF(tau, delta, 3) +
-            ((JF4 - tau * JF(tau, delta, 6))) ^ 2 /
-            (2 * JF4 / delta + JF(tau, delta, 5))
+            -tau ^ 2 * phi:tau_tau(tau, delta) +
+            ((phi_delta - tau * phi:delta_tau(tau, delta))) ^ 2 /
+            (2 * phi_delta / delta + phi:delta_delta(tau, delta))
         ) * R
     end
 }
 
 fluid.s = {
     t_rho = function(t, rho)
-        local tau, delta = t0 / (t + CtoK), rho / rho0
-        return R * (tau * JF(tau, delta, 2) - JF(tau, delta, 1))
+        local tau = get_tau(t)
+        local delta = get_delta(rho)
+        return R * (tau * phi:tau((tau, delta) - phi(tau, delta))
     end
 }
 
 fluid.p = {
     t_rho = function(t, rho)
-        t = t + CtoK
-        local tau, delta = t0 / t, rho / rho0
-        return JF(tau, delta, 4) * rho * delta * R * t
+        local tau = get_tau(t)
+        local delta = get_delta(rho)
+        return phi:delta(tau, delta) * rho * delta * R * t
     end
 }
 
