@@ -1,4 +1,4 @@
-local gamma_data = require 'water.gamma_data'
+local gamma_data = require 'if97.water.Gibbs_data'
 
 local gamma = {}
 
@@ -55,7 +55,7 @@ local function get_pi(p)
 end
 
 local function get_tau(t)
-    return 1386 / t
+    return 1386.0 / t
 end
 
 local gamma_mt = {
@@ -63,4 +63,8 @@ local gamma_mt = {
     __index = gamma
 }
 
-return setmetatable({}, gamma_mt), get_pi, get_tau
+return {
+    gamma = setmetatable({}, gamma_mt),
+    get_pi = get_pi,
+    get_tau = get_tau
+}

@@ -1,17 +1,8 @@
-local R = require'consts'.R
-local phi, get_tau, get_delta = require'fluid.Helmholtz'
-local sqrt = require'math'.sqrt
-
-local fluid = {}
-
-fluid.i = {
-    t_rho = function(t, rho)
-        local tau = get_tau(t)
-        local delta = get_delta(rho)
-        return (tau * phi:tau((tau, delta) + delta * phi:delta(tau, delta)) * R * t
-    end
+local fluid = {
+    h = require 'if97.fluid.h'
 }
 
+--[[
 fluid.w = {
     t_rho = function(t, rho)
         local tau = get_tau(t)
@@ -64,4 +55,5 @@ fluid.p = {
     end
 }
 
+--]]
 return fluid

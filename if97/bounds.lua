@@ -1,13 +1,13 @@
-local consts = require'consts'
+local consts = require 'if97.consts'
 local bounds = {}
-local sqrt = require'math'.sqrt
+local sqrt = require 'math'.sqrt
 
 --- Функция линии [4] (пароводяной смеси) в PT диаграмме от температуры
 ---@param t number [К] Температура
 ---@return number? [МПа] Давление
 function bounds.saturationPressure_t(t)
     if t > consts.t4Max or t < consts.minT then -- Выход за границы
-        return 0/0
+        return false
     end
     local K1 = t - 0.23855557567849 / (t - 650.17534844798)
     local K2 = -17.073846940092 * K1 ^ 2 + 12020.82470247 * K1 - 3232555.0322333
@@ -20,7 +20,7 @@ end
 ---@return number [К] Температура
 function bounds.saturationTemp_p(p)
     if p > consts.p4Max or p < consts.minP then -- Выход за границы
-        return 0/0
+        return false
     end
     local k1 = 650.17534844798
     local p_quarter = p ^ 0.25

@@ -1,5 +1,5 @@
 local n_1 = 1.0658070028513
-local data = require 'fluid.data'
+local data = require 'if97.fluid.data'
 
 local phi = {}
 
@@ -57,13 +57,12 @@ function phi:delta_tau(tau, delta)
     return energy
 end
 
-
 local function get_tau(t)
-    647.096 / t
+    return 647.096 / t
 end
 
 local function get_delta(rho)
-    rho / 322
+    return rho / 322
 end
 
 local phi_mt = {
