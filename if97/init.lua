@@ -20,6 +20,8 @@ local if97 = {
     borderTemp_p = require 'if97.bounds'.borderTemp_p,
     region_t_p = require 'if97.bounds'.region_t_p,
 
+    consts = require 'if97.consts',
+
     ---вода [1]
     water = require 'if97.water',
 
